@@ -9,140 +9,172 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class TaskManager {
-    int currentTaskId;
-    HashMap<Integer, Task> kanbanTasks;
+    private int currentTaskId;
+    //HashMap<Integer, Task> kanbanTasks;
+    HashMap<Integer, Task> tasks;
+    HashMap<Integer, Epic> epicTasks;
+    HashMap<Integer, SubTask> subTasks;
 
     public TaskManager() {
-        this.kanbanTasks = new HashMap<Integer, Task>();
+        //this.kanbanTasks = new HashMap<Integer, Task>();
+        this.tasks = new HashMap<Integer, Task>();
+        this.epicTasks = new HashMap<Integer, Epic>();
+        this.subTasks = new HashMap<Integer, SubTask>();
         currentTaskId = 0;
     }
 
-    //2d. Создание. Сам объект должен передаваться в качестве параметра
+    //2d. Создание таски. Сам объект должен передаваться в качестве параметра
     public void addNewTask(Task task) {
-        if (task instanceof SubTask subTask) {
-            if (kanbanTasks.containsKey(subTask.getEpicId())) {
-                int taskId = setNewTaskId();
-                task.setId(taskId);
-                kanbanTasks.put(taskId, task);
-                Epic prntEpic = (Epic) kanbanTasks.get(subTask.getEpicId());
-                prntEpic.addSubtask(taskId);
-            }
-        } else {
-            int taskId = setNewTaskId();
-            task.setId(taskId);
-            kanbanTasks.put(taskId, task);
-        }
+        int taskId = setNewTaskId();
+        task.setId(taskId);
+        tasks.put(taskId, task);
     }
 
-    //2a. Получение списка всех-всех задач
-    public ArrayList<Task> getKanbanAllTasks() {
-        ArrayList<Task> tasks = new ArrayList<Task>();
-        for (Integer taskId : kanbanTasks.keySet()) {
-            Task task = kanbanTasks.get(taskId);
-            tasks.add(task);
+    //2d. Создание эпика. Сам объект должен передаваться в качестве параметра
+    public void addNewEpic(Epic task) {
+        int taskId = setNewTaskId();
+        task.setId(taskId);
+        epicTasks.put(taskId, task);
+    }
+
+    //2d. Создание сабтаски. Сам объект должен передаваться в качестве параметра
+    public void addNewSubtask(SubTask task) {
+        if (epicTasks.containsKey(task.getEpicId())) {
+            int taskId = setNewTaskId();
+            task.setId(taskId);
+            subTasks.put(taskId, task);
+            Epic prntEpic = epicTasks.get(task.getEpicId());
+            prntEpic.addSubtask(taskId);
         }
-        return tasks;
     }
 
     //2a. Получение списка всех обычных задач
-    public ArrayList<Task> getKanbanRegularTasks() {
-        ArrayList<Task> tasks = new ArrayList<Task>();
-        for (Integer taskId : kanbanTasks.keySet()) {
-            Task task = kanbanTasks.get(taskId);
-            if (task.getClass().equals(Task.class)) {
-                tasks.add(task);
-            }
-        }
-        return tasks;
+    public ArrayList<Task> getAllTasks() {
+        return new ArrayList<Task>(tasks.values());
     }
 
     //2a. Получение списка всех эпиков
-    public ArrayList<Task> getKanbanEpicTasks() {
-        ArrayList<Task> tasks = new ArrayList<Task>();
-        for (Integer taskId : kanbanTasks.keySet()) {
-            Task task = kanbanTasks.get(taskId);
-            if (task instanceof Epic) {
-                tasks.add(task);
-            }
-        }
-        return tasks;
+    public ArrayList<Epic> getAllEpic() {
+        return new ArrayList<Epic>(epicTasks.values());
     }
 
     //2a. Получение списка всех сабтасок
-    public ArrayList<Task> getKanbanSubTasks() {
-        ArrayList<Task> tasks = new ArrayList<Task>();
-        for (Integer taskId : kanbanTasks.keySet()) {
-            Task task = kanbanTasks.get(taskId);
-            if (task instanceof SubTask) {
-                tasks.add(task);
-            }
-        }
-        return tasks;
+    public ArrayList<SubTask> getAllSubtasks() {
+        return new ArrayList<SubTask>(subTasks.values());
     }
 
-    //2c. Получение по идентификатору
+    //2c. Получение таски по идентификатору
     public Task getTask(int taskId) {
-        if (kanbanTasks.containsKey(taskId)) {
-            return kanbanTasks.get(taskId);
+        if (tasks.containsKey(taskId)) {
+            return tasks.get(taskId);
         } else {
             return null;
         }
     }
 
-    //2e. Обновление. Новая версия объекта с верным идентификатором передаётся в виде параметра
-    public void updateTask(Task task) {
-        if (kanbanTasks.containsKey(task.getId())) {
-            kanbanTasks.put(task.getId(), task);
-            if (task instanceof SubTask subTask) {
-                Epic parentTask = (Epic) kanbanTasks.get(subTask.getEpicId());
-                changeEpicStatus(parentTask);
-            }
+    //2c. Получение эпика по идентификатору
+    public Task getEpicTask(int taskId) {
+        if (epicTasks.containsKey(taskId)) {
+            return epicTasks.get(taskId);
+        } else {
+            return null;
         }
     }
 
-    // 2f. Удаление по идентификатору
-    public void removeTask(int taskId) {
-        Task task;
-        if (kanbanTasks.containsKey(taskId)) {
-            task = kanbanTasks.get(taskId);
+    //2c. Получение сабтаски по идентификатору
+    public Task getSubTask(int taskId) {
+        if (subTasks.containsKey(taskId)) {
+            return subTasks.get(taskId);
         } else {
-            return;
+            return null;
         }
-        if (task instanceof SubTask subTask) {
-            Epic parentTask = (Epic) kanbanTasks.get(subTask.getEpicId());
-            parentTask.removeSubtask(subTask.getId());
-            kanbanTasks.remove(subTask.getId());
-            changeEpicStatus(parentTask);
-        } else if (task instanceof Epic epicTask) {
-            ArrayList<Integer> subTasks = epicTask.getSubtasksId();
+    }
+
+    //2e. Обновление таски. Новая версия объекта с верным идентификатором передаётся в виде параметра
+    public void updateTask(Task task) {
+        if (tasks.containsKey(task.getId())) {
+            tasks.put(task.getId(), task);
+        }
+    }
+
+    //2e. Обновление эпика. Новая версия объекта с верным идентификатором передаётся в виде параметра
+    public void updateEpicTask(Epic task) {
+        if (epicTasks.containsKey(task.getId())) {
+            epicTasks.put(task.getId(), task);
+        }
+    }
+
+    //2e. Обновление сабтаски. Новая версия объекта с верным идентификатором передаётся в виде параметра
+    public void updateSubTask(SubTask task) {
+        if (subTasks.containsKey(task.getId())) {
+            subTasks.put(task.getId(), task);
+            Epic prntEpic = epicTasks.get(task.getEpicId());
+            changeEpicStatus(prntEpic);
+        }
+    }
+
+    // 2f. Удаление по идентификатору таски
+    public void removeTask(int taskId) {
+        if (tasks.containsKey(taskId)) {
+            tasks.remove(taskId);
+        }
+    }
+
+    // 2f. Удаление по идентификатору эпика, удаляем и его сабтаски
+    public void removeEpicTask(int taskId) {
+        if (epicTasks.containsKey(taskId)) {
+            ArrayList<Integer> subTasks = epicTasks.get(taskId).getSubtasksId();
             for (Integer subtask : subTasks) {
-                kanbanTasks.remove(subtask);
+                subTasks.remove(subtask);
             }
-            kanbanTasks.remove(taskId);
-        } else {
-            kanbanTasks.remove(taskId);
+            epicTasks.remove(taskId);
+        }
+    }
+
+    // 2f. Удаление по идентификатору сабтаски
+    public void removeSubTask(int taskId) {
+        if (subTasks.containsKey(taskId)) {
+            SubTask task = subTasks.get(taskId);
+            Epic prntEpic = epicTasks.get(task.getEpicId());
+            prntEpic.removeSubtask(task.getId());
+            subTasks.remove(task.getId());
+            changeEpicStatus(prntEpic);
         }
     }
 
     //2b. Удаляем все таски
-    public void removeAllTask(int taskId) {
-        kanbanTasks.clear();
+    public void removeAllTasks() {
+        tasks.clear();
+    }
+
+    //2b. Удаляем все сабтаски
+    public void removeAllSubtasks() {
+        subTasks.clear();
+        for (Epic epictask : epicTasks.values()) {
+            epictask.clearSubtasks();
+            changeEpicStatus(epictask);
+        }
+    }
+
+    //2b. Удаляем все эпики
+    public void removeAllEpics() {
+        for (Epic epictask : epicTasks.values()) {
+            ArrayList<Integer> subTasksId = epictask.getSubtasksId();
+            for (Integer subtask : subTasksId) {
+                subTasks.remove(subtask);
+            }
+        }
+        epicTasks.clear();
     }
 
     //3a. Получение списка всех подзадач определённого эпика
     public ArrayList<Task> getEpicSubtasks(int taskId) {
-        Task task;
-        if (kanbanTasks.containsKey(taskId)) {
-            task = kanbanTasks.get(taskId);
-            if (task instanceof Epic epicTask) {
-                ArrayList<Task> subTasks = new ArrayList<>();
-                for (Integer subtask : epicTask.getSubtasksId()) {
-                    subTasks.add(kanbanTasks.get(subtask));
-                }
-                return subTasks;
-            } else {
-                return null;
+        if (epicTasks.containsKey(taskId)) {
+            ArrayList<Task> subTasks = new ArrayList<>();
+            for (Integer subtask : epicTasks.get(taskId).getSubtasksId()) {
+                subTasks.add(subTasks.get(subtask));
             }
+            return subTasks;
         } else {
             return null;
         }
@@ -159,10 +191,10 @@ public class TaskManager {
         int newTask = 0;
         if (!etask.getSubtasksId().isEmpty()) {
             for (Integer subTaskId : etask.getSubtasksId()) {
-                if (kanbanTasks.get(subTaskId).getStatus() == TaskStatus.DONE) {
+                if (subTasks.get(subTaskId).getStatus() == TaskStatus.DONE) {
                     doneTask++;
                 }
-                if (kanbanTasks.get(subTaskId).getStatus() == TaskStatus.NEW) {
+                if (subTasks.get(subTaskId).getStatus() == TaskStatus.NEW) {
                     newTask++;
                 }
             }

@@ -12,25 +12,27 @@ public class Epic extends Task {
     }
 
     public void removeSubtask(int subtaskId) {
-        System.out.println("*хотим удалить*" + subtaskId);
-        String tmp = new String("");
-        for (Integer subtask : subtasks) {
-            tmp = tmp + " (" + subtask + ")";
-        }
-        System.out.println("*вот что внутри*" + tmp);
-        System.out.println("*айди нужного*" + subtasks.indexOf(subtaskId));
         if (!subtasks.isEmpty()) {
             subtasks.remove(subtasks.remove(subtasks.indexOf(subtaskId)));
         }
 
     }
 
+    public void clearSubtasks() {
+        subtasks.clear();
+    }
+
     @Override
     public String toString() {
         String tmp = super.toString() + ", subtasks: ";
-        for (Integer subtask : subtasks) {
-            tmp = tmp + " (" + subtask + ")";
+        if (subtasks.size() > 0) {
+            for (Integer subtask : subtasks) {
+                tmp = tmp + " (" + subtask + ")";
+            }
+        } else {
+            tmp = tmp + " (empty)";
         }
+
         return tmp;
     }
 
