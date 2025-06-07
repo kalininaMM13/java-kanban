@@ -19,11 +19,5 @@ public class SubTask extends Task {
         tmp = tmp + ", epic: " + epicId;
         return tmp;
     }
-
-    @Override
-    public void setStatus(TaskStatus status) {
-        super.setStatus(status);
-    }
-
 }
 
